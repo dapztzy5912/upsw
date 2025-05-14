@@ -11,31 +11,38 @@
   <a href="upload.html">+ Tambah Status</a>
 
   <script>
+    let allStatus = [];
+
     async function loadStatus() {
       const res = await fetch('/status');
-      const status = await res.json();
+      const data = await res.json();
+      allStatus = data;
+      renderStatusList();
+    }
+
+    function renderStatusList() {
       const container = document.getElementById('statusList');
       container.innerHTML = '';
-
-      status.forEach(s => {
+      allStatus.forEach((s, i) => {
         const el = document.createElement('div');
         el.className = 'status-item';
+        el.onclick = () => viewStatus(i);
         el.innerHTML = `
           <img src="${s.fotoProfil}" class="profile-pic">
-          <div class="status-content">
-            <strong>${s.nama}</strong><br>
-            ${s.caption ? `<p>${s.caption}</p>` : ''}
-            ${s.file.includes('image') ? 
-              `<img src="${s.file}" class="status-media">` : 
-              `<video src="${s.file}" controls class="status-media"></video>`}
-          </div>
+          <div style="margin-top: 8px; color: white;">${s.nama}</div>
         `;
         container.appendChild(el);
       });
     }
 
+    function viewStatus(index) {
+      const s = allStatus[index];
+      localStorage.setItem("viewStatus", JSON.stringify(s));
+      window.location.href = "view.html";
+    }
+
     loadStatus();
-    setInterval(loadStatus, 5000); // Refresh setiap 5 detik
+    setInterval(loadStatus, 5000);
   </script>
 </body>
 </html>
