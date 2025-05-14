@@ -12,12 +12,17 @@
     <textarea id="caption" placeholder="Tulis caption (opsional)"></textarea><br>
     <button type="submit">Upload</button>
   </form>
+  <a href="index.html">Kembali ke Status</a>
 
   <script>
     document.getElementById("uploadForm").onsubmit = async function(e) {
       e.preventDefault();
       const akun = JSON.parse(localStorage.getItem("akun"));
-      if (!akun) return alert("Silakan login dulu");
+      if (!akun) {
+        alert("Silakan login dulu");
+        window.location.href = "login.html";
+        return;
+      }
 
       const file = document.getElementById("file").files[0];
       const caption = document.getElementById("caption").value;
@@ -30,12 +35,23 @@
           caption,
           file: reader.result
         };
-        await fetch('/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        window.location.href = "index.html";
+        
+        try {
+          const response = await fetch('/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          
+          if (response.ok) {
+            window.location.href = "index.html";
+          } else {
+            alert("Gagal mengupload status");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Terjadi kesalahan saat mengupload status");
+        }
       };
       reader.readAsDataURL(file);
     };
