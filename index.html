@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Status</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Status</h2>
+  <div id="statusList" class="status-list"></div>
+  <a href="upload.html">+ Tambah Status</a>
+
+  <script>
+    async function loadStatus() {
+      const res = await fetch('/status');
+      const status = await res.json();
+      const container = document.getElementById('statusList');
+      container.innerHTML = '';
+
+      status.forEach(s => {
+        const el = document.createElement('div');
+        el.className = 'status-item';
+        el.innerHTML = `
+          <img src="${s.fotoProfil}" class="profile-pic">
+          <div class="status-content">
+            <strong>${s.nama}</strong><br>
+            ${s.caption ? `<p>${s.caption}</p>` : ''}
+            ${s.file.includes('image') ? 
+              `<img src="${s.file}" class="status-media">` : 
+              `<video src="${s.file}" controls class="status-media"></video>`}
+          </div>
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 5000); // Refresh setiap 5 detik
+  </script>
+</body>
+</html>

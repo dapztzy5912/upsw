@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Status</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Upload Status</h2>
+  <form id="uploadForm">
+    <input type="file" id="file" accept="image/*,video/*" required><br>
+    <textarea id="caption" placeholder="Tulis caption (opsional)"></textarea><br>
+    <button type="submit">Upload</button>
+  </form>
+
+  <script>
+    document.getElementById("uploadForm").onsubmit = async function(e) {
+      e.preventDefault();
+      const akun = JSON.parse(localStorage.getItem("akun"));
+      if (!akun) return alert("Silakan login dulu");
+
+      const file = document.getElementById("file").files[0];
+      const caption = document.getElementById("caption").value;
+
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const data = {
+          nama: akun.nama,
+          fotoProfil: akun.foto,
+          caption,
+          file: reader.result
+        };
+        await fetch('/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        window.location.href = "index.html";
+      };
+      reader.readAsDataURL(file);
+    };
+  </script>
+</body>
+</html>

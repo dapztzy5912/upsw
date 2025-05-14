@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Login</h2>
+  <form id="loginForm">
+    <input type="text" id="nama" placeholder="Masukkan nama kamu" required><br>
+    <button type="submit">Login</button>
+  </form>
+
+  <script>
+    document.getElementById("loginForm").onsubmit = async function(e) {
+      e.preventDefault();
+      const nama = document.getElementById("nama").value;
+      const res = await fetch('/akun/' + nama);
+      const data = await res.json();
+      if (data) {
+        localStorage.setItem("akun", JSON.stringify(data));
+        window.location.href = "index.html";
+      } else {
+        alert("Akun tidak ditemukan. Silakan daftar dulu.");
+      }
+    };
+  </script>
+</body>
+</html>
