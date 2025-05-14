@@ -27,9 +27,22 @@
         const el = document.createElement('div');
         el.className = 'status-item';
         el.onclick = () => viewStatus(i);
+        
+        // Menambahkan preview file (thumbnail) jika ada
+        let previewHtml = '';
+        if (s.file) {
+          if (s.file.includes('image')) {
+            previewHtml = `<div class="preview-container"><img src="${s.file}" class="status-preview"></div>`;
+          } else if (s.file.includes('video')) {
+            previewHtml = `<div class="preview-container"><video src="${s.file}" class="status-preview"></video></div>`;
+          }
+        }
+        
         el.innerHTML = `
           <img src="${s.fotoProfil}" class="profile-pic">
           <div style="margin-top: 8px; color: white;">${s.nama}</div>
+          ${previewHtml}
+          ${s.caption ? `<div class="status-caption">${s.caption.substring(0, 20)}${s.caption.length > 20 ? '...' : ''}</div>` : ''}
         `;
         container.appendChild(el);
       });
@@ -41,8 +54,15 @@
       window.location.href = "view.html";
     }
 
-    loadStatus();
-    setInterval(loadStatus, 5000);
+    // Check login status
+    const akun = localStorage.getItem("akun");
+    if (!akun) {
+      window.location.href = "login.html";
+    } else {
+      loadStatus();
+      // Refresh status setiap 5 detik
+      setInterval(loadStatus, 5000);
+    }
   </script>
 </body>
 </html>
