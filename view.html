@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Lihat Status</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="viewContainer"></div>
+
+  <script>
+    const s = JSON.parse(localStorage.getItem("viewStatus"));
+    const container = document.getElementById('viewContainer');
+    if (!s) {
+      container.innerHTML = "<p>Status tidak ditemukan</p>";
+    } else {
+      container.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img src="${s.fotoProfil}" class="profile-pic">
+          <strong>${s.nama}</strong>
+        </div>
+        <div style="margin-top:15px;">
+          ${s.caption ? `<p>${s.caption}</p>` : ""}
+          ${s.file.includes("image") ? 
+            `<img src="${s.file}" class="status-media">` :
+            `<video src="${s.file}" controls autoplay class="status-media"></video>`}
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
