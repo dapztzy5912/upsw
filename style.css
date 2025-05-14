@@ -49,3 +49,16 @@ button {
   max-height: 200px;
   object-fit: cover;
 }
+
+.status-list {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+
+.status-item {
+  width: 90px;
+  text-align: center;
+  cursor: pointer;
+}
