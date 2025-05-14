@@ -1,3 +1,5 @@
+const multer = require('multer');
+const upload = multer();
 const express = require('express');
 const fs = require('fs');
 const app = express();
@@ -34,10 +36,9 @@ app.post('/status', upload.none(), (req, res) => {
     waktu: Date.now()
   };
 
-  // Simpan semua status tanpa menimpa
   data.status.push(newStatus);
 
-  fs.writeFileSync('./database.json', JSON.stringify(data, null, 2));
+  fs.writeFileSync(databasePath, JSON.stringify(data, null, 2));
   res.json({ success: true });
 });
 
