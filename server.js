@@ -7,16 +7,25 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const PORT = 3000;
 
-let database = JSON.parse(fs.readFileSync('database.json', 'utf-8'));
+// Pastikan file database ada
+const databasePath = 'database.json';
+if (!fs.existsSync(databasePath)) {
+  fs.writeFileSync(databasePath, JSON.stringify({
+    akun: {},
+    status: []
+  }, null, 2));
+}
+
+let database = JSON.parse(fs.readFileSync(databasePath, 'utf-8'));
 
 app.use(express.static(__dirname));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 app.post('/daftar', (req, res) => {
   const { nama, foto } = req.body;
   const akun = { nama, foto };
   database.akun[nama] = akun;
-  fs.writeFileSync('database.json', JSON.stringify(database, null, 2));
+  fs.writeFileSync(databasePath, JSON.stringify(database, null, 2));
   res.sendStatus(200);
 });
 
@@ -25,7 +34,8 @@ app.get('/akun/:nama', (req, res) => {
   res.json(akun || null);
 });
 
-app.post('/status', upload.none(), (req, res) => {
+// Endpoint untuk upload status
+app.post('/upload', (req, res) => {
   const { nama, fotoProfil, caption, file } = req.body;
 
   const newStatus = {
@@ -36,9 +46,9 @@ app.post('/status', upload.none(), (req, res) => {
     waktu: Date.now()
   };
 
-  data.status.push(newStatus);
+  database.status.push(newStatus);
 
-  fs.writeFileSync(databasePath, JSON.stringify(data, null, 2));
+  fs.writeFileSync(databasePath, JSON.stringify(database, null, 2));
   res.json({ success: true });
 });
 
