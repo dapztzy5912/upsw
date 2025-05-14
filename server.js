@@ -23,13 +23,22 @@ app.get('/akun/:nama', (req, res) => {
   res.json(akun || null);
 });
 
-app.post('/upload', (req, res) => {
-  const status = req.body;
-  status.timestamp = Date.now();
-  database.status.push(status);
-  fs.writeFileSync('database.json', JSON.stringify(database, null, 2));
-  io.emit('new-status', status);
-  res.sendStatus(200);
+app.post('/status', upload.none(), (req, res) => {
+  const { nama, fotoProfil, caption, file } = req.body;
+
+  const newStatus = {
+    nama,
+    fotoProfil,
+    caption,
+    file,
+    waktu: Date.now()
+  };
+
+  // Simpan semua status tanpa menimpa
+  data.status.push(newStatus);
+
+  fs.writeFileSync('./database.json', JSON.stringify(data, null, 2));
+  res.json({ success: true });
 });
 
 app.get('/status', (req, res) => {
