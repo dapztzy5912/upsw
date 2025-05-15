@@ -2,58 +2,221 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lihat Status</title>
-  <link rel="stylesheet" href="style.css">
   <style>
-    /* Tambahan style untuk tampilan status */
+    body {
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #121b22;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .status-view {
+      position: relative;
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      background-color: rgba(0, 0, 0, 0.9);
+    }
+    
+    .status-header {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      backdrop-filter: blur(5px) brightness(0.7);
+    }
+    
+    .status-header .profile {
+      display: flex;
+      align-items: center;
+    }
+    
+    .status-header .profile-pic {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 12px;
+      object-fit: cover;
+    }
+    
+    .status-header .user-info {
+      color: white;
+    }
+    
+    .status-header .user-info .name {
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .status-header .user-info .timestamp {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    
+    .status-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 5;
+    }
+    
     .status-media {
       max-width: 100%;
-      border-radius: 8px;
-      margin-top: 10px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      max-height: 100vh;
+      object-fit: contain;
     }
-    .back-button {
-      margin-bottom: 15px;
-      display: block;
+    
+    .status-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      z-index: 6;
+    }
+    
+    .status-nav {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    
+    .status-nav.left {
+      left: 0;
+    }
+    
+    .status-nav.right {
+      right: 0;
+    }
+    
+    .status-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      display: flex;
+      z-index: 20;
+      padding: 12px 10px 0;
+    }
+    
+    .progress-segment {
+      height: 2px;
+      background-color: rgba(255, 255, 255, 0.3);
+      flex: 1;
+      margin: 0 2px;
+    }
+    
+    .progress-segment.active {
+      background-color: white;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      color: white;
+      background: none;
+      border: none;
+      font-size: 20px;
+      z-index: 15;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <a href="index.html" class="back-button">← Kembali</a>
-  <div id="viewContainer"></div>
+  <div class="status-view">
+    <div class="status-progress">
+      <div class="progress-segment active"></div>
+    </div>
+    
+    <div class="status-header">
+      <div class="profile">
+        <img src="" class="profile-pic" id="profilePic">
+        <div class="user-info">
+          <div class="name" id="userName"></div>
+          <div class="timestamp">sekarang</div>
+        </div>
+      </div>
+    </div>
+    
+    <button class="close-btn" onclick="goBack()">✕</button>
+    
+    <div class="status-content" id="statusContent">
+      <!-- Media and content will be inserted here -->
+    </div>
+    
+    <div class="status-caption" id="statusCaption"></div>
+    
+    <div class="status-nav left"></div>
+    <div class="status-nav right"></div>
+  </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const s = JSON.parse(localStorage.getItem("viewStatus"));
-      const container = document.getElementById('viewContainer');
+      const status = JSON.parse(localStorage.getItem("viewStatus"));
       
-      if (!s) {
-        container.innerHTML = "<p>Status tidak ditemukan</p>";
-      } else {
-        container.innerHTML = `
-          <div style="display:flex;align-items:center;gap:10px;">
-            <img src="${s.fotoProfil}" class="profile-pic">
-            <strong>${s.nama}</strong>
-          </div>
-          <div style="margin-top:15px;">
-            ${s.caption ? `<p>${s.caption}</p>` : ""}
-            ${s.file ? renderMedia(s.file) : ""}
-          </div>
-        `;
+      if (!status) {
+        alert("Status tidak ditemukan");
+        goBack();
+        return;
       }
+      
+      // Set user info
+      document.getElementById("userName").textContent = status.nama;
+      document.getElementById("profilePic").src = status.fotoProfil || 'default-profile.png';
+      
+      // Set status content
+      const contentContainer = document.getElementById("statusContent");
+      if (status.file) {
+        if (status.file.includes('image')) {
+          contentContainer.innerHTML = `<img src="${status.file}" class="status-media">`;
+        } else if (status.file.includes('video')) {
+          contentContainer.innerHTML = `<video src="${status.file}" class="status-media" autoplay controls></video>`;
+        }
+      }
+      
+      // Set caption
+      const captionEl = document.getElementById("statusCaption");
+      if (status.caption) {
+        captionEl.textContent = status.caption;
+      } else {
+        captionEl.style.display = 'none';
+      }
+      
+      // Auto-close status after 5 seconds if it's an image
+      if (!status.file || !status.file.includes('video')) {
+        setTimeout(goBack, 5000);
+      }
+      
+      // Start progress bar animation
+      const progressBar = document.querySelector('.progress-segment');
+      progressBar.style.transition = 'width 5s linear';
+      progressBar.style.width = '100%';
     });
-
-    // Fungsi untuk render media berdasarkan tipe file
-    function renderMedia(fileUrl) {
-      if (!fileUrl) return "";
-      
-      if (fileUrl.includes('image')) {
-        return `<img src="${fileUrl}" class="status-media">`;
-      } else if (fileUrl.includes('video')) {
-        return `<video src="${fileUrl}" controls autoplay class="status-media"></video>`;
-      } else {
-        return `<p>File tidak dapat ditampilkan</p>`;
-      }
+    
+    function goBack() {
+      window.location.href = "index.html";
     }
   </script>
 </body>
