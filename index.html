@@ -2,51 +2,181 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Status</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #121b22;
+      color: white;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background-color: #1f2c34;
+    }
+    
+    .header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 500;
+    }
+    
+    .status-container {
+      display: flex;
+      overflow-x: auto;
+      padding: 15px 10px;
+      scrollbar-width: none; /* Hide scrollbar for Firefox */
+    }
+    
+    .status-container::-webkit-scrollbar {
+      display: none; /* Hide scrollbar for Chrome/Safari */
+    }
+    
+    .status-item {
+      min-width: 80px;
+      margin-right: 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+    
+    .profile-circle {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      margin: 0 auto;
+    }
+    
+    .profile-border {
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      border: 2px solid #00a884;
+      box-sizing: border-box;
+    }
+    
+    .profile-pic {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      background-color: #1f2c34;
+    }
+    
+    .status-name {
+      margin-top: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80px;
+    }
+    
+    .add-status {
+      position: relative;
+    }
+    
+    .add-icon {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background-color: #00a884;
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      border: 2px solid #121b22;
+    }
+
+    /* For first status item with "+" button */
+    .my-status .profile-pic {
+      filter: brightness(0.8);
+    }
+    
+    /* For logout button */
+    .logout-btn {
+      background-color: transparent;
+      color: #00a884;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
   <div class="header">
     <h2>Status</h2>
     <button id="logoutBtn" class="logout-btn">Logout</button>
   </div>
-  <div id="statusList" class="status-list"></div>
-  <a href="upload.html" class="add-btn">+ Tambah Status</a>
+  
+  <div class="status-container" id="statusList">
+    <!-- Status items will be generated here -->
+  </div>
 
   <script>
     let allStatus = [];
 
     async function loadStatus() {
-      const res = await fetch('/status');
-      const data = await res.json();
-      allStatus = data;
-      renderStatusList();
+      try {
+        const res = await fetch('/status');
+        const data = await res.json();
+        allStatus = data;
+        renderStatusList();
+      } catch(error) {
+        console.error("Error loading status:", error);
+        // For development only - using localStorage data or empty array
+        const currentUser = JSON.parse(localStorage.getItem("akun")) || {};
+        allStatus = [];
+        renderStatusList();
+      }
     }
 
     function renderStatusList() {
       const container = document.getElementById('statusList');
       container.innerHTML = '';
+      
+      // First, add the current user's status with "+" button
+      const currentUser = JSON.parse(localStorage.getItem("akun")) || {};
+      const currentUserEl = document.createElement('div');
+      currentUserEl.className = 'status-item my-status';
+      currentUserEl.innerHTML = `
+        <div class="profile-circle add-status">
+          <img src="${currentUser.fotoProfil || 'default-profile.png'}" class="profile-pic">
+          <div class="add-icon">+</div>
+        </div>
+        <div class="status-name">Status saya</div>
+      `;
+      currentUserEl.addEventListener('click', () => {
+        window.location.href = "upload.html";
+      });
+      container.appendChild(currentUserEl);
+      
+      // Then add other users' statuses
       allStatus.forEach((s, i) => {
         const el = document.createElement('div');
         el.className = 'status-item';
-        el.onclick = () => viewStatus(i);
-        
-        // Menambahkan preview file (thumbnail) jika ada
-        let previewHtml = '';
-        if (s.file) {
-          if (s.file.includes('image')) {
-            previewHtml = `<div class="preview-container"><img src="${s.file}" class="status-preview"></div>`;
-          } else if (s.file.includes('video')) {
-            previewHtml = `<div class="preview-container"><video src="${s.file}" class="status-preview"></video></div>`;
-          }
-        }
-        
         el.innerHTML = `
-          <img src="${s.fotoProfil}" class="profile-pic">
-          <div style="margin-top: 8px; color: white;">${s.nama}</div>
-          ${previewHtml}
-          ${s.caption ? `<div class="status-caption">${s.caption.substring(0, 20)}${s.caption.length > 20 ? '...' : ''}</div>` : ''}
+          <div class="profile-circle">
+            <div class="profile-border"></div>
+            <img src="${s.fotoProfil}" class="profile-pic">
+          </div>
+          <div class="status-name">${s.nama}</div>
         `;
+        el.addEventListener('click', () => viewStatus(i));
         container.appendChild(el);
       });
     }
