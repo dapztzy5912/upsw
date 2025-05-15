@@ -2,118 +2,109 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Status</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       margin: 0;
-      padding: 0;
-      background-color: #121b22;
+      font-family: Arial, sans-serif;
+      background-color: #111;
       color: white;
     }
-    
+
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 20px;
-      background-color: #1f2c34;
-    }
-    
-    .header h2 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 500;
-    }
-    
-    .status-container {
-      display: flex;
-      overflow-x: auto;
-      padding: 15px 10px;
-      scrollbar-width: none; /* Hide scrollbar for Firefox */
-    }
-    
-    .status-container::-webkit-scrollbar {
-      display: none; /* Hide scrollbar for Chrome/Safari */
-    }
-    
-    .status-item {
-      min-width: 80px;
-      margin-right: 15px;
-      text-align: center;
-      cursor: pointer;
-    }
-    
-    .profile-circle {
-      position: relative;
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      margin: 0 auto;
-    }
-    
-    .profile-border {
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      border-radius: 50%;
-      border: 2px solid #00a884;
-      box-sizing: border-box;
-    }
-    
-    .profile-pic {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-      background-color: #1f2c34;
-    }
-    
-    .status-name {
-      margin-top: 8px;
-      font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 80px;
-    }
-    
-    .add-status {
-      position: relative;
-    }
-    
-    .add-icon {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      background-color: #00a884;
-      color: white;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 18px;
-      border: 2px solid #121b22;
+      padding: 16px;
+      background-color: #1c1c1c;
     }
 
-    /* For first status item with "+" button */
-    .my-status .profile-pic {
-      filter: brightness(0.8);
-    }
-    
-    /* For logout button */
     .logout-btn {
-      background-color: transparent;
-      color: #00a884;
+      background: none;
       border: none;
-      padding: 8px 12px;
+      color: #00e676;
+      font-size: 16px;
       cursor: pointer;
-      font-size: 14px;
+    }
+
+    .status-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 10px;
+    }
+
+    .status-row {
+      display: flex;
+      overflow-x: auto;
+      gap: 16px;
+      padding-bottom: 8px;
+    }
+
+    .status-row::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .status-row::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+
+    .add-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 90px;
+      color: white;
+      text-decoration: none;
+    }
+
+    .add-circle {
+      width: 60px;
+      height: 60px;
+      background-color: #00e676;
+      border-radius: 50%;
+      font-size: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .status-item {
+      background-color: #0d3a4d;
+      border-radius: 20px;
+      padding: 10px;
+      min-width: 120px;
+      max-width: 140px;
+      text-align: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .profile-pic {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .preview-container {
+      margin-top: 8px;
+    }
+
+    .status-preview {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .status-caption {
+      font-size: 12px;
+      margin-top: 6px;
     }
   </style>
 </head>
@@ -122,62 +113,70 @@
     <h2>Status</h2>
     <button id="logoutBtn" class="logout-btn">Logout</button>
   </div>
-  
-  <div class="status-container" id="statusList">
-    <!-- Status items will be generated here -->
+
+  <div class="status-container">
+    <!-- Bagian atas -->
+    <div class="status-row" id="statusRowTop">
+      <a href="upload.html" class="add-status">
+        <div class="add-circle">+</div>
+        <div class="add-label">Tambah Status</div>
+      </a>
+    </div>
+
+    <!-- Garis pembatas -->
+    <hr style="border: none; border-top: 1px solid #333; margin: 0 10px;">
+
+    <!-- Bagian bawah -->
+    <div class="status-row" id="statusRowBottom">
+      <!-- Status tambahan akan muncul di sini -->
+    </div>
   </div>
 
   <script>
     let allStatus = [];
 
     async function loadStatus() {
-      try {
-        const res = await fetch('/status');
-        const data = await res.json();
-        allStatus = data;
-        renderStatusList();
-      } catch(error) {
-        console.error("Error loading status:", error);
-        // For development only - using localStorage data or empty array
-        const currentUser = JSON.parse(localStorage.getItem("akun")) || {};
-        allStatus = [];
-        renderStatusList();
-      }
+      const res = await fetch('/status');
+      const data = await res.json();
+      allStatus = data;
+      renderStatusList();
     }
 
     function renderStatusList() {
-      const container = document.getElementById('statusList');
-      container.innerHTML = '';
-      
-      // First, add the current user's status with "+" button
-      const currentUser = JSON.parse(localStorage.getItem("akun")) || {};
-      const currentUserEl = document.createElement('div');
-      currentUserEl.className = 'status-item my-status';
-      currentUserEl.innerHTML = `
-        <div class="profile-circle add-status">
-          <img src="${currentUser.fotoProfil || 'default-profile.png'}" class="profile-pic">
-          <div class="add-icon">+</div>
-        </div>
-        <div class="status-name">Status saya</div>
-      `;
-      currentUserEl.addEventListener('click', () => {
-        window.location.href = "upload.html";
-      });
-      container.appendChild(currentUserEl);
-      
-      // Then add other users' statuses
+      const top = document.getElementById('statusRowTop');
+      const bottom = document.getElementById('statusRowBottom');
+
+      // Hapus status sebelumnya (kecuali tombol tambah)
+      top.querySelectorAll('.status-item').forEach(el => el.remove());
+      bottom.innerHTML = '';
+
       allStatus.forEach((s, i) => {
         const el = document.createElement('div');
         el.className = 'status-item';
+        el.onclick = () => viewStatus(i);
+
+        let previewHtml = '';
+        if (s.file) {
+          if (s.file.includes('image')) {
+            previewHtml = `<div class="preview-container"><img src="${s.file}" class="status-preview"></div>`;
+          } else if (s.file.includes('video')) {
+            previewHtml = `<div class="preview-container"><video src="${s.file}" class="status-preview" preload="metadata"></video></div>`;
+          }
+        }
+
         el.innerHTML = `
-          <div class="profile-circle">
-            <div class="profile-border"></div>
-            <img src="${s.fotoProfil}" class="profile-pic">
-          </div>
-          <div class="status-name">${s.nama}</div>
+          <img src="${s.fotoProfil}" class="profile-pic">
+          <div style="margin-top: 8px;">${s.nama}</div>
+          ${previewHtml}
+          ${s.caption ? `<div class="status-caption">${s.caption.substring(0, 20)}${s.caption.length > 20 ? '...' : ''}</div>` : ''}
         `;
-        el.addEventListener('click', () => viewStatus(i));
-        container.appendChild(el);
+
+        // 5 pertama ke atas, sisanya ke bawah
+        if (i < 4) {
+          top.appendChild(el);
+        } else {
+          bottom.appendChild(el);
+        }
       });
     }
 
@@ -187,25 +186,21 @@
       window.location.href = "view.html";
     }
 
-    // Fungsi logout
-    document.getElementById("logoutBtn").addEventListener("click", function() {
+    document.getElementById("logoutBtn").addEventListener("click", function () {
       localStorage.removeItem("akun");
       window.location.href = "landing.html";
     });
 
-    // Check login status
     function checkLogin() {
       const akun = localStorage.getItem("akun");
       if (!akun) {
         window.location.href = "landing.html";
       } else {
         loadStatus();
-        // Refresh status setiap 5 detik
         setInterval(loadStatus, 5000);
       }
     }
 
-    // Periksa status login saat halaman dimuat
     checkLogin();
   </script>
 </body>
