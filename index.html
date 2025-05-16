@@ -115,7 +115,7 @@
   </div>
 
   <div class="status-container">
-    <!-- Bagian atas -->
+
     <div class="status-row" id="statusRowTop">
       <a href="upload.html" class="add-status">
         <div class="add-circle">+</div>
@@ -123,12 +123,10 @@
       </a>
     </div>
 
-    <!-- Garis pembatas -->
     <hr style="border: none; border-top: 1px solid #333; margin: 0 10px;">
 
-    <!-- Bagian bawah -->
     <div class="status-row" id="statusRowBottom">
-      <!-- Status tambahan akan muncul di sini -->
+
     </div>
   </div>
 
@@ -146,7 +144,6 @@
       const top = document.getElementById('statusRowTop');
       const bottom = document.getElementById('statusRowBottom');
 
-      // Hapus status sebelumnya (kecuali tombol tambah)
       top.querySelectorAll('.status-item').forEach(el => el.remove());
       bottom.innerHTML = '';
 
@@ -171,7 +168,6 @@
           ${s.caption ? `<div class="status-caption">${s.caption.substring(0, 20)}${s.caption.length > 20 ? '...' : ''}</div>` : ''}
         `;
 
-        // 5 pertama ke atas, sisanya ke bawah
         if (i < 4) {
           top.appendChild(el);
         } else {
@@ -180,11 +176,11 @@
       });
     }
 
-    function viewStatus(index) {
-      const s = allStatus[index];
-      localStorage.setItem("viewStatus", JSON.stringify(s));
-      window.location.href = "view.html";
-    }
+function viewStatus(index) {
+  const s = allStatus[index];
+  localStorage.setItem("viewStatus", JSON.stringify(s));
+  window.location.href = "view.html";
+}
 
     document.getElementById("logoutBtn").addEventListener("click", function () {
       localStorage.removeItem("akun");
