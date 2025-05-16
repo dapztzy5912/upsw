@@ -1,4 +1,64 @@
 {
-  "akun": {},
-  "status": []
+  "akun": {
+    "Ahmad": {
+      "nama": "Ahmad",
+      "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
+    },
+    "Budi": {
+      "nama": "Budi",
+      "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
+    },
+    "Citra": {
+      "nama": "Citra",
+      "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
+    },
+    "Dina": {
+      "nama": "Dina",
+      "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA..."
+    }
+  },
+  "status": [
+    {
+      "nama": "Ahmad",
+      "fotoProfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "caption": "Liburan di pantai hari ini!",
+      "file": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "waktu": 1713436811253
+    },
+    {
+      "nama": "Budi",
+      "fotoProfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "caption": "Ngoding sepanjang hari 😎",
+      "file": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "waktu": 1713440245789
+    },
+    {
+      "nama": "Citra",
+      "fotoProfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "caption": "Konser kemarin malam seru banget!",
+      "file": "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc282...",
+      "waktu": 1713456321456
+    },
+    {
+      "nama": "Dina",
+      "fotoProfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "caption": "Resep masakan baru, cobain deh!",
+      "file": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "waktu": 1713475689234
+    },
+    {
+      "nama": "Ahmad",
+      "fotoProfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "caption": "Makan siang enak banget hari ini",
+      "file": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "waktu": 1713478965123
+    },
+    {
+      "nama": "Budi",
+      "fotoProfil": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "caption": "Belajar framework baru",
+      "file": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...",
+      "waktu": 1713489765432
+    }
+  ]
 }
