@@ -82,6 +82,12 @@
       text-align: center;
       cursor: pointer;
       flex-shrink: 0;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .status-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 230, 118, 0.3);
     }
 
     .profile-pic {
@@ -106,12 +112,54 @@
       font-size: 12px;
       margin-top: 6px;
     }
+    
+    .error-message {
+      background-color: #ff5252;
+      color: white;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      text-align: center;
+      display: none;
+    }
+    
+    .status-indicator {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #00e676;
+      border-radius: 50%;
+      top: -5px;
+      right: -5px;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7);
+      }
+      
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(0, 230, 118, 0);
+      }
+      
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 230, 118, 0);
+      }
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h2>Status</h2>
     <button id="logoutBtn" class="logout-btn">Logout</button>
+  </div>
+  
+  <div id="errorMessage" class="error-message">
+    Terjadi kesalahan saat memuat status
   </div>
 
   <div class="status-container">
@@ -130,39 +178,61 @@
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     let allStatus = [];
+    let lastViewedStatus = null;
+    const socket = io();
+    
+    // Mendengarkan event status baru dari server
+    socket.on('new-status', (newStatus) => {
+      allStatus.unshift(newStatus);
+      if (allStatus.length > 30) allStatus.pop();
+      renderStatusList();
+    });
 
     async function loadStatus() {
-      const res = await fetch('/status');
-      const data = await res.json();
-      allStatus = data;
-      renderStatusList();
+      try {
+        const res = await fetch('/status');
+        const data = await res.json();
+        allStatus = data;
+        renderStatusList();
+        document.getElementById('errorMessage').style.display = 'none';
+      } catch (error) {
+        console.error("Error loading status:", error);
+        document.getElementById('errorMessage').style.display = 'block';
+      }
     }
 
     function renderStatusList() {
       const top = document.getElementById('statusRowTop');
       const bottom = document.getElementById('statusRowBottom');
 
+      // Hapus status yang sudah ada, tapi tetap pertahankan link "Tambah Status"
       top.querySelectorAll('.status-item').forEach(el => el.remove());
       bottom.innerHTML = '';
 
       allStatus.forEach((s, i) => {
         const el = document.createElement('div');
         el.className = 'status-item';
-        el.onclick = () => viewStatus(i);
+        el.style.position = 'relative'; // Untuk posisi indikator status
+        el.setAttribute('data-status-id', s.id || '');
+        el.onclick = (event) => {
+          event.preventDefault();
+          viewStatus(s);
+        };
 
         let previewHtml = '';
         if (s.file) {
           if (s.file.includes('image')) {
-            previewHtml = `<div class="preview-container"><img src="${s.file}" class="status-preview"></div>`;
+            previewHtml = `<div class="preview-container"><img src="${s.file}" class="status-preview" alt="Preview"></div>`;
           } else if (s.file.includes('video')) {
             previewHtml = `<div class="preview-container"><video src="${s.file}" class="status-preview" preload="metadata"></video></div>`;
           }
         }
 
         el.innerHTML = `
-          <img src="${s.fotoProfil}" class="profile-pic">
+          <img src="${s.fotoProfil}" class="profile-pic" alt="${s.nama}">
           <div style="margin-top: 8px;">${s.nama}</div>
           ${previewHtml}
           ${s.caption ? `<div class="status-caption">${s.caption.substring(0, 20)}${s.caption.length > 20 ? '...' : ''}</div>` : ''}
@@ -176,11 +246,17 @@
       });
     }
 
-function viewStatus(index) {
-  const s = allStatus[index];
-  localStorage.setItem("viewStatus", JSON.stringify(s));
-  window.location.href = "view.html";
-}
+    function viewStatus(status) {
+      try {
+        // Gunakan objek status lengkap, bukan hanya indeks
+        localStorage.setItem("viewStatus", JSON.stringify(status));
+        lastViewedStatus = status;
+        window.location.href = "view.html";
+      } catch (error) {
+        console.error("Error saat melihat status:", error);
+        alert("Gagal membuka status. Silakan coba lagi.");
+      }
+    }
 
     document.getElementById("logoutBtn").addEventListener("click", function () {
       localStorage.removeItem("akun");
