@@ -232,13 +232,27 @@
         // Find the index of the current status
         const viewStatus = JSON.parse(localStorage.getItem("viewStatus"));
         if (viewStatus) {
-          // Find the matching status by comparing properties
+          // Find the matching status by just comparing nama and waktu
+          // Lebih longgar untuk mencocokkan status
           for (let i = 0; i < allStatus.length; i++) {
             if (allStatus[i].nama === viewStatus.nama && 
-                allStatus[i].waktu === viewStatus.waktu && 
-                allStatus[i].caption === viewStatus.caption) {
+                Math.abs(allStatus[i].waktu - viewStatus.waktu) < 1000) { 
+              // Menggunakan toleransi 1 detik untuk timestamp
               currentIndex = i;
               break;
+            }
+          }
+          
+          // Jika masih belum ketemu, coba cari hanya berdasarkan nama dan file 
+          // (sebagai fallback)
+          if (currentIndex === 0 && viewStatus.file) {
+            for (let i = 0; i < allStatus.length; i++) {
+              if (allStatus[i].nama === viewStatus.nama && 
+                  allStatus[i].file && viewStatus.file && 
+                  allStatus[i].file.substring(0, 50) === viewStatus.file.substring(0, 50)) {
+                currentIndex = i;
+                break;
+              }
             }
           }
         }
@@ -375,7 +389,7 @@
             contentContainer.innerHTML = `
               <div class="error-message">
                 <p>Tidak dapat memuat video</p>
-              </div>
+            </div>
             `;
             startTimer();
           };
