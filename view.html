@@ -99,6 +99,7 @@
       align-items: center;
       justify-content: center;
       z-index: 10;
+      cursor: pointer;
     }
     
     .status-nav.left {
@@ -107,6 +108,18 @@
     
     .status-nav.right {
       right: 0;
+    }
+    
+    .nav-arrow {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: white;
+      font-size: 16px;
     }
     
     .status-progress {
@@ -142,20 +155,46 @@
       z-index: 15;
       cursor: pointer;
     }
+
+    .error-message {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .timestamp {
+      font-size: 12px;
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div class="status-view">
-    <div class="status-progress">
-      <div class="progress-segment active"></div>
+    <div class="status-progress" id="progressContainer">
+      <!-- Progress segments will be created here -->
     </div>
     
     <div class="status-header">
       <div class="profile">
-        <img src="" class="profile-pic" id="profilePic">
+        <img src="" class="profile-pic" id="profilePic" alt="Profile Picture">
         <div class="user-info">
           <div class="name" id="userName"></div>
-          <div class="timestamp">sekarang</div>
+          <div class="timestamp" id="timestamp"></div>
         </div>
       </div>
     </div>
@@ -163,61 +202,284 @@
     <button class="close-btn" onclick="goBack()">✕</button>
     
     <div class="status-content" id="statusContent">
-      <!-- Media and content will be inserted here -->
+      <div class="loading-spinner"></div>
     </div>
     
     <div class="status-caption" id="statusCaption"></div>
     
-    <div class="status-nav left"></div>
-    <div class="status-nav right"></div>
+    <div class="status-nav left" id="prevBtn">
+      <div class="nav-arrow">←</div>
+    </div>
+    <div class="status-nav right" id="nextBtn">
+      <div class="nav-arrow">→</div>
+    </div>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const status = JSON.parse(localStorage.getItem("viewStatus"));
+    // Global variables
+    let allStatus = [];
+    let currentIndex = 0;
+    let statusTimeout = null;
+    let statusDuration = 5000; // 5 seconds for images
+    let activeProgressBar = null;
+
+    // Fetch all statuses from server
+    async function loadAllStatus() {
+      try {
+        const res = await fetch('/status');
+        allStatus = await res.json();
+        
+        // Find the index of the current status
+        const viewStatus = JSON.parse(localStorage.getItem("viewStatus"));
+        if (viewStatus) {
+          // Find the matching status by comparing properties
+          for (let i = 0; i < allStatus.length; i++) {
+            if (allStatus[i].nama === viewStatus.nama && 
+                allStatus[i].waktu === viewStatus.waktu && 
+                allStatus[i].caption === viewStatus.caption) {
+              currentIndex = i;
+              break;
+            }
+          }
+        }
+        
+        setupProgressBar();
+        displayCurrentStatus();
+      } catch (error) {
+        console.error("Error loading statuses:", error);
+        document.getElementById("statusContent").innerHTML = `
+          <div class="error-message">
+            <p>Gagal memuat status. Silakan coba lagi.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Setup progress bar segments based on number of statuses
+    function setupProgressBar() {
+      const container = document.getElementById("progressContainer");
+      container.innerHTML = '';
       
-      if (!status) {
-        alert("Status tidak ditemukan");
-        goBack();
+      for (let i = 0; i < allStatus.length; i++) {
+        const segment = document.createElement("div");
+        segment.className = "progress-segment" + (i === currentIndex ? " active" : "");
+        container.appendChild(segment);
+      }
+    }
+
+    // Update progress bar
+    function updateProgressBar() {
+      const segments = document.querySelectorAll(".progress-segment");
+      segments.forEach((segment, i) => {
+        segment.className = "progress-segment" + (i === currentIndex ? " active" : "");
+      });
+      
+      if (activeProgressBar) {
+        activeProgressBar.style.transition = "";
+        activeProgressBar.style.width = "0%";
+      }
+      
+      activeProgressBar = segments[currentIndex];
+      if (activeProgressBar) {
+        // Force reflow
+        void activeProgressBar.offsetWidth;
+        
+        activeProgressBar.style.transition = `width ${statusDuration / 1000}s linear`;
+        activeProgressBar.style.width = "100%";
+      }
+    }
+
+    // Display current status
+    function displayCurrentStatus() {
+      if (allStatus.length === 0) {
+        document.getElementById("statusContent").innerHTML = `
+          <div class="error-message">
+            <p>Tidak ada status yang tersedia.</p>
+          </div>
+        `;
         return;
       }
+      
+      clearTimeout(statusTimeout);
+      
+      const status = allStatus[currentIndex];
       
       // Set user info
       document.getElementById("userName").textContent = status.nama;
       document.getElementById("profilePic").src = status.fotoProfil || 'default-profile.png';
       
+      // Format and display timestamp
+      const timestamp = new Date(status.waktu);
+      const now = new Date();
+      let timeDisplay;
+      
+      if (timestamp.toDateString() === now.toDateString()) {
+        // Same day - show time
+        timeDisplay = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else {
+        // Different day - show date
+        timeDisplay = timestamp.toLocaleDateString();
+      }
+      
+      document.getElementById("timestamp").textContent = timeDisplay;
+      
       // Set status content
       const contentContainer = document.getElementById("statusContent");
-      if (status.file) {
-        if (status.file.includes('image')) {
-          contentContainer.innerHTML = `<img src="${status.file}" class="status-media">`;
-        } else if (status.file.includes('video')) {
-          contentContainer.innerHTML = `<video src="${status.file}" class="status-media" autoplay controls></video>`;
-        }
-      }
+      
+      // Show loading initially
+      contentContainer.innerHTML = `<div class="loading-spinner"></div>`;
       
       // Set caption
       const captionEl = document.getElementById("statusCaption");
       if (status.caption) {
         captionEl.textContent = status.caption;
+        captionEl.style.display = 'block';
       } else {
         captionEl.style.display = 'none';
       }
       
-      // Auto-close status after 5 seconds if it's an image
-      if (!status.file || !status.file.includes('video')) {
-        setTimeout(goBack, 5000);
+      // Handle media content
+      if (status.file) {
+        if (status.file.includes('image')) {
+          const img = new Image();
+          img.className = "status-media";
+          img.onload = function() {
+            contentContainer.innerHTML = '';
+            contentContainer.appendChild(img);
+            startTimer();
+          };
+          img.onerror = function() {
+            contentContainer.innerHTML = `
+              <div class="error-message">
+                <p>Tidak dapat memuat gambar</p>
+              </div>
+            `;
+            startTimer();
+          };
+          img.src = status.file;
+          statusDuration = 5000; // 5 seconds for images
+        } else if (status.file.includes('video')) {
+          const video = document.createElement('video');
+          video.className = "status-media";
+          video.controls = true;
+          video.autoplay = true;
+          video.onloadedmetadata = function() {
+            statusDuration = video.duration * 1000; // Video duration in ms
+            startTimer();
+          };
+          video.onloadeddata = function() {
+            contentContainer.innerHTML = '';
+            contentContainer.appendChild(video);
+          };
+          video.onerror = function() {
+            contentContainer.innerHTML = `
+              <div class="error-message">
+                <p>Tidak dapat memuat video</p>
+              </div>
+            `;
+            startTimer();
+          };
+          video.src = status.file;
+        } else {
+          contentContainer.innerHTML = `
+            <div class="error-message">
+              <p>Format file tidak didukung</p>
+            </div>
+          `;
+          startTimer();
+        }
+      } else {
+        contentContainer.innerHTML = `
+          <div class="error-message">
+            <p>Status ini tidak memiliki konten media</p>
+          </div>
+        `;
+        startTimer();
       }
       
-      // Start progress bar animation
-      const progressBar = document.querySelector('.progress-segment');
-      progressBar.style.transition = 'width 5s linear';
-      progressBar.style.width = '100%';
-    });
-    
+      updateProgressBar();
+    }
+
+    // Start timer for automatic status navigation
+    function startTimer() {
+      clearTimeout(statusTimeout);
+      statusTimeout = setTimeout(goToNextStatus, statusDuration);
+    }
+
+    // Go to next status
+    function goToNextStatus() {
+      if (currentIndex < allStatus.length - 1) {
+        currentIndex++;
+        displayCurrentStatus();
+      } else {
+        goBack(); // Return to status list when finished
+      }
+    }
+
+    // Go to previous status
+    function goToPrevStatus() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        displayCurrentStatus();
+      }
+    }
+
+    // Go back to status list
     function goBack() {
+      clearTimeout(statusTimeout);
       window.location.href = "index.html";
     }
+
+    // Initialize the view
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAllStatus();
+      
+      // Set up navigation buttons
+      document.getElementById("nextBtn").addEventListener("click", function(e) {
+        e.stopPropagation();
+        goToNextStatus();
+      });
+      
+      document.getElementById("prevBtn").addEventListener("click", function(e) {
+        e.stopPropagation();
+        goToPrevStatus();
+      });
+      
+      // Pause timer when video is playing (if any)
+      document.addEventListener("play", function(e) {
+        if (e.target.tagName === "VIDEO") {
+          clearTimeout(statusTimeout);
+        }
+      }, true);
+      
+      // Resume timer when video is paused (if any)
+      document.addEventListener("pause", function(e) {
+        if (e.target.tagName === "VIDEO") {
+          startTimer();
+        }
+      }, true);
+      
+      // Touch navigation
+      let touchStartX = 0;
+      document.addEventListener("touchstart", function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+      });
+      
+      document.addEventListener("touchend", function(e) {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > 30) { // Minimum swipe distance
+          if (diff > 0) {
+            // Swipe left - next status
+            goToNextStatus();
+          } else {
+            // Swipe right - previous status
+            goToPrevStatus();
+          }
+        }
+      });
+    });
   </script>
 </body>
 </html>
